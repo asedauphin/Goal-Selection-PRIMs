@@ -1,0 +1,9 @@
+repeat 1
+reset
+run recall recall_random 1
+run attribute attribute_random 1
+run category category_random 1
+run complete complete_random 1
+run paired-associate paired_random 1
+run what-comes-before before_random 1
+run press-key press-key_random 1

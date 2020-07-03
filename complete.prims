@@ -1,0 +1,314 @@
+//Two adjacent numbers are displayed. 
+//The model has to pursue the enumeration.
+
+define task complete {
+  initial-skills: (complete)
+  opc: t
+  explore-exploit: 0.5
+
+  ans: 0.2 //Activation noise
+  ol: t //optimized version (Base-level activation)
+  default-activation: 1.0 //Base-level activation
+  bll: 0.5 //base-level decay
+
+  // Spread activation from goals
+  default-operator-assoc: 4.0
+  goal-operator-learning: t
+  operator-bll: nil
+  beta: 0.1
+  reward: 10.0
+
+  //Inter operators learning
+  default-inter-operator-assoc: 0.0
+  default-operator-self-assoc: 0.0
+  inter-operator-learning: nil
+
+  //Spread activation from chunks
+  goal-chunk-spreads: nil
+  ga: 1.0
+  input-activation: 2.0
+  retrieval-activation: 4.0
+  imaginal-activation: 0.0
+  mas: 3.0
+
+  //Retrieval duration
+  lf: 0.2 //latency factor F
+  rt: -2.0 //retrieval threshold Tau
+
+}
+
+define goal primitives {
+
+operator V1toRT1 {
+  V1 <> nil
+==>
+    V1 -> RT1
+}
+
+operator V1toRT2 {
+  V1 <> nil
+==>
+    V1 -> RT2
+}
+
+operator V1toRT3 {
+  V1 <> nil
+==>
+    V1 -> RT3
+}
+
+
+operator V2toRT1 {
+  V2 <> nil
+==>
+    V2 -> RT1
+}
+
+operator V2toRT2 {
+  V2 <> nil
+==>
+    V2 -> RT2
+}
+
+operator V2toRT3 {
+  V2 <> nil
+==>
+    V2 -> RT3
+}
+
+operator RT1toAC1 {
+  RT1 <> nil
+==>
+  action -> AC1
+  RT1 -> AC2
+}
+
+operator RT2toAC1 {
+  RT2 <> nil
+==>
+  action -> AC1
+  RT2 -> AC2
+}
+
+operator RT3toAC1 {
+  RT3 <> nil
+==>
+  action -> AC1
+  RT3 -> AC2
+}
+
+
+operator RT2toRT1 {
+  RT2 <> nil
+==>
+  RT2 -> RT1
+}
+
+operator RT3toRT2 {
+  RT3 <> nil
+==>
+  RT3 -> RT2
+}
+  
+operator V1toWM1 {
+  V1 <> nil
+  WM1 = nil
+==>
+   V1 -> WM1
+}
+
+operator V2toWM1 {
+  V2 <> nil
+  WM1 = nil
+==>
+   V2 -> WM1
+}
+
+operator RT2toWM1 {
+  RT2 <> nil
+  WM1 = nil
+==>
+  RT2 -> WM1
+}
+
+operator RT3toWM1 {
+  RT3 <> nil
+  WM1 = nil
+==>
+  RT3 -> WM1
+}
+
+operator WM1toRT1 {
+  RT1 = nil
+  WM1 <> nil
+==>
+    WM1 -> RT1
+//    nil -> WM1
+}
+
+operator WM1toRT2 {
+  RT2 = nil
+  WM1 <> nil
+==>
+    WM1 -> RT2
+//    nil -> WM1
+}
+
+operator WM1toRT3 {
+  RT3 = nil
+  WM1 <> nil
+==>
+    WM1 -> RT3
+//    nil -> WM1
+}
+
+operator WM1toAC1 {
+  WM1 <> nil
+==>
+  action -> AC1
+    WM1 -> AC2
+//    nil -> WM1
+}
+
+
+operator C1toRT1 {
+  G1 <> nil
+==>
+  *fact-type -> RT1
+}
+
+operator C1altToRT1 {
+  G1 <> nil
+==>
+  *fact-type-two -> RT1
+}
+
+operator RT1equalC1 {
+  RT1 = *fact-type
+==>
+}
+
+operator RT1equalC1alt {
+  RT1 = *fact-type-two
+==>
+}
+
+// Operators that implement multiple states
+
+operator stage1 {
+  G2 = state-one
+  ==>
+  state-two -> G2
+}
+  
+operator stage2 {
+  G2 = state-two
+  ==>
+  state-three -> G2
+}
+
+// Operators that model a transition to a new goal
+
+// We keep the old goal in G1 to ensure credit assignment is maintained
+
+operator next-goal {
+  G1 <> nil
+  G2 = nil
+==>
+  *next-goal-type -> G2
+}
+
+
+}
+
+
+define action say {
+  latency: 0.3
+  noise: 0.1
+  distribution: uniform
+  output: Saying
+}
+
+define facts {
+  (one  a b)
+  (two  b b)
+  (three  c b)
+  (four  d b)
+  (five  e b)
+  (six  f b)
+  (seven  g b)
+  (eight  h b)
+  (nine  i b)
+  (ten j b)
+  (odd k b)
+  (even l b)
+}
+
+
+define facts {
+    (cf1 count-fact  one  two)
+    (cf2 count-fact  two  three)
+    (cf3 count-fact  three  four)
+    (cf4 count-fact  four  five)
+    (cf5 count-fact  five  six)
+    (cf6 count-fact  six  seven)
+    (cf7 count-fact  seven  eight)
+    (cf8 count-fact  eight  nine)
+    (cf9 count-fact  nine  ten)
+    (p1 parity  one  odd)
+    (p2 parity  two  even)
+    (p3 parity  three  odd)
+    (p4 parity  four  even)
+    (p5 parity  five  odd)
+    (p6 parity  six  even)
+    (p7 parity  seven  odd)
+    (p8 parity  eight  even)
+    (p9 parity  nine  odd)
+    (p10 parity ten even)
+}
+
+define init-script {
+  set-graph-title("Accuracy")
+  set-average-window(20)
+}
+
+define script {
+    trial-start()
+    set-goal("complete",["fact-type","count-fact"])
+
+    stimuli = ["one", "two","three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+    pair = random(8) //select a random number in [0, 7]
+    stimulus1 = stimuli[pair]
+    stimulus2 = stimuli[pair + 1]
+    print(stimulus1, stimulus2, "?")
+
+    screen(stimulus1, stimulus2)
+    run-step()
+    screen("nil")
+    run-until-relative-time-or-action(5.0, "action")
+    ac = action-history() 
+    print(ac)
+
+    if (length(ac) != 2) {
+      issue-reward(-1)
+      print("Wrong!")
+      plot-point(0)
+    }
+
+    else {
+      if (ac[0] == "action") && (ac[1] == stimuli[pair + 2]) {
+        issue-reward()
+        print("Correct!")
+        plot-point(1)
+      }
+      else { 
+        issue-reward(-1)
+        print("Wrong!")
+        plot-point(0)
+      } 
+  }  
+
+ 
+    trial-end()
+    sleep(5.0)
+}

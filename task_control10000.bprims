@@ -1,0 +1,15 @@
+repeat 100
+reset
+run attribute attribute_alone 10000
+reset
+run complete complete_alone 10000
+reset
+run press-key press_alone 10000
+reset
+run recall recall_alone 10000
+reset
+run category category_alone 10000
+reset
+run paired-associate paired_alone 10000
+reset
+run what-comes-before before_alone 10000
